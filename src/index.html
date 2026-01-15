@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>XSpend App</title>
+  <title>Spend Vista</title>
+  <link rel="icon" type="image/png" href="./assets/imgs/logo.png" />
   <style>
     body, html { margin:0; padding:0; height:100%; }
   </style>
@@ -24,7 +25,7 @@
 
       PushNotifications.addListener('registration', async token => {
         console.log('Device token:', token.value);
-        await fetch('https://xspend.tinyjobse.in/api/app-save-fcm-token', {
+        await fetch('https://stageapp.spendvista.com/api/app-save-fcm-token', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token: token.value }),
@@ -44,7 +45,7 @@
     document.addEventListener('DOMContentLoaded', async () => {
 
       // Open Laravel URL
-      await Browser.open({ url: 'https://xspend.tinyjobse.in', windowName: '_self' });
+      await Browser.open({ url: 'https://stageapp.spendvista.com', windowName: '_self' });
 
       // Listen for URL changes to detect login
       Browser.addListener('browserPageLoaded', async info => {

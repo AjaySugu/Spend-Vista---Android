@@ -2,12 +2,12 @@ apply plugin: 'com.android.application'
 apply plugin: 'com.google.gms.google-services' // Required for Firebase
 
 android {
-    namespace "com.xspend.app"
+    namespace "com.spendvista.app"
 
     compileSdk 35  // Updated for AndroidX compatibility
 
     defaultConfig {
-        namespace "com.xspend.app" // Must match Firebase package
+        namespace "com.spendvista.app" // Must match Firebase package
         minSdkVersion 24
         targetSdkVersion 35
         versionCode 1

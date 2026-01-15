@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Xspend</string>
-    <string name="title_activity_main">Xspend</string>
-    <string name="package_name">com.example.app</string>
-    <string name="custom_url_scheme">com.example.app</string>
+    <string name="app_name">Spend Vista</string>
+    <string name="title_activity_main">Spend Vista</string>
+    <string name="package_name">com.spendvista.app</string>
+    <string name="custom_url_scheme">com.spendvista.app</string>
 </resources>
