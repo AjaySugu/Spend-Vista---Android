@@ -1,0 +1,10 @@
+{
+  "appId": "com.example.app",
+  "appName": "Xspend",
+  "webDir": "src",
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": false
+    }
+  }
+}

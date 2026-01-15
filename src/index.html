@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>XSpend App</title>
+  <style>
+    body, html { margin:0; padding:0; height:100%; }
+  </style>
+</head>
+<body>
+  <script type="module">
+    import { Browser } from '@capacitor/browser';
+    import { PushNotifications } from '@capacitor/push-notifications';
+
+    async function requestPushPermission() {
+      const perm = await PushNotifications.requestPermissions();
+      if (perm.receive === 'granted') {
+        PushNotifications.register();
+      } else {
+        console.log('Notification permission denied');
+        return;
+      }
+
+      PushNotifications.addListener('registration', async token => {
+        console.log('Device token:', token.value);
+        await fetch('https://xspend.tinyjobse.in/api/app-save-fcm-token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: token.value }),
+          credentials: 'include' // send auth cookies
+        });
+      });
+
+      PushNotifications.addListener('registrationError', err => {
+        console.error('Push registration error', err);
+      });
+
+      PushNotifications.addListener('pushNotificationReceived', notif => {
+        console.log('Push received:', notif);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+
+      // Open Laravel URL
+      await Browser.open({ url: 'https://xspend.tinyjobse.in', windowName: '_self' });
+
+      // Listen for URL changes to detect login
+      Browser.addListener('browserPageLoaded', async info => {
+        const url = info.url;
+        console.log('Current URL:', url);
+
+        // If URL contains logged_in flag
+        if (url.includes('logged_in=1')) {
+          console.log('User logged in, requesting push permission...');
+          requestPushPermission();
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1094586537354",
+    "project_id": "xspend-172c8",
+    "storage_bucket": "xspend-172c8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1094586537354:android:cf26d7c68452295b35a473",
+        "android_client_info": {
+          "package_name": "com.xspend.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1094586537354-ege7q3n1n8q2q8mlhj0jjsolao7h47n6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD2i2TmXqvkFlWl7jY387rzrBRQcJjTUf0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1094586537354-ege7q3n1n8q2q8mlhj0jjsolao7h47n6.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
