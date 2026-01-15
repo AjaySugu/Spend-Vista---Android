@@ -1,6 +1,6 @@
 {
-  "appId": "com.example.app",
-  "appName": "Xspend",
+  "appId": "com.spendvista.app",
+  "appName": "Spend Vista",
   "webDir": "src",
   "plugins": {
     "SplashScreen": {

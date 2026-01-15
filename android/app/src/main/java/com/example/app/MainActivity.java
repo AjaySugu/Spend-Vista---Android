@@ -1,4 +1,4 @@
-package com.xspend.app;
+package com.spendvista.app;
 
 import com.getcapacitor.BridgeActivity;
 

@@ -6,9 +6,9 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   // bundledWebRuntime: false,
   server: {
-    url: 'https://xspend.tinyjobse.in',
+    url: 'https://stageapp.spendvista.com/',
     cleartext: true,
-    allowNavigation: ['xspend.tinyjobse.in'],
+    allowNavigation: ['stageapp.spendvista.com'],
   },    
 };
 
