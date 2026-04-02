@@ -4,17 +4,21 @@ const config: CapacitorConfig = {
   appId: 'com.spendvista.app',
   appName: 'Spend Vista',
   webDir: 'dist',
-  // bundledWebRuntime: false,
+
+  // ✅ Load from local dev server (for testing)
   server: {
-    url: 'https://stageapp.spendvista.com/',
+    url: 'https://stagev2.spendvista.com',
     cleartext: true,
-    allowNavigation: ['stageapp.spendvista.com'],
   },
+
   plugins: {
     StatusBar: {
       overlaysWebView: false,
       style: 'light',
       backgroundColor: '#ffffff00',
+    },
+    PushNotifications: {
+      presentationOptions: ["badge", "sound", "alert"],
     },
   },
 };

@@ -1,5 +1,5 @@
 cap sync
 cd android
-gradlew.bat --stop
-gradlew.bat clean
-gradlew.bat assembleDebug
+.\gradlew.bat --stop
+.\gradlew.bat clean
+.\gradlew.bat assembleDebug

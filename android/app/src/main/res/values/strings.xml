@@ -4,4 +4,7 @@
     <string name="title_activity_main">Spend Vista</string>
     <string name="package_name">com.spendvista.app</string>
     <string name="custom_url_scheme">com.spendvista.app</string>
+    <string name="sync_notification_title">Financial Sync Active</string>
+    <string name="sync_notification_text">Spend Vista is automatically tracking your expenses.</string>
+    <string name="sync_channel_name">Spend Vista Sync Channel</string>
 </resources>

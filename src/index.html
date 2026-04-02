@@ -6,90 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Spend Vista</title>
   <link rel="icon" type="image/png" href="./assets/imgs/logo.png" />
-  <style>
-    body,
-    html {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-    }
-  </style>
+  <link rel="stylesheet" href="./css/style.css" />
 </head>
 
 <body>
-  <script type="module">
-    import { Browser } from '@capacitor/browser';
-    import { PushNotifications } from '@capacitor/push-notifications';
-    import { registerPlugin } from '@capacitor/core';
-
-    // Register the custom plugin
-    const DeveloperMode = registerPlugin('DeveloperMode');
-
-    async function requestPushPermission() {
-      const perm = await PushNotifications.requestPermissions();
-      if (perm.receive === 'granted') {
-        PushNotifications.register();
-      } else {
-        console.log('Notification permission denied');
-        return;
-      }
-
-      PushNotifications.addListener('registration', async token => {
-        console.log('Device token:', token.value);
-        await fetch('https://stageapp.spendvista.com/api/app-save-fcm-token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: token.value }),
-          credentials: 'include' // send auth cookies
-        });
-      });
-
-      PushNotifications.addListener('registrationError', err => {
-        console.error('Push registration error', err);
-      });
-
-      PushNotifications.addListener('pushNotificationReceived', notif => {
-        console.log('Push received:', notif);
-      });
-    }
-
-    document.addEventListener('DOMContentLoaded', async () => {
-      // 1. Check Developer Mode
-      try {
-        // DEBUG: Verify code update
-        alert("Starting Developer Mode Check...");
-
-        const { enabled } = await DeveloperMode.check();
-
-        // DEBUG: Show result
-        alert("Check Result: " + enabled);
-
-        if (enabled) {
-          // Alert and STOP execution
-          alert("developer setting should be disabled");
-          return;
-        }
-      } catch (e) {
-        console.error("Developer Mode check failed", e);
-        alert("Security Check Failed: " + JSON.stringify(e));
-      }
-
-      // 2. Open Laravel URL if check passes
-      await Browser.open({ url: 'https://stageapp.spendvista.com', windowName: '_self' });
-
-      // 3. Listen for URL changes to detect login
-      Browser.addListener('browserPageLoaded', async info => {
-        const url = info.url;
-        console.log('Current URL:', url);
-
-        // If URL contains logged_in flag
-        if (url.includes('logged_in=1')) {
-          console.log('User logged in, requesting push permission...');
-          requestPushPermission();
-        }
-      });
-    });
-  </script>
+  <script type="module" src="./app.js"></script>
 </body>
 
 </html>
