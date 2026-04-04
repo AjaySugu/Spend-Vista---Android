@@ -5,91 +5,267 @@ import { registerPlugin, Capacitor } from '@capacitor/core';
 const DeveloperMode = registerPlugin('DeveloperMode');
 const BankSmsRetriever = registerPlugin('BankSmsRetriever');
 
-// 🔔 Push Notification Setup  // Push notification api is not called here it is in login file laravel
+// � Local Notification Log Storage
+let notificationLog = [];
+const MAX_LOG_ENTRIES = 500; // Keep last 500 entries
+
+// 🔔 Push Notification Setup
 let listenersInitialized = false;
 
-// ✅ Setup Push Listeners
+// 📝 Log Helper Function with Android Logcat Integration
+function logNotificationEvent(level, message, data = null) {
+  const timestamp = new Date().toISOString();
+  const logEntry = {
+    timestamp,
+    level,
+    message,
+    data,
+    url: window.location.href
+  };
+
+  notificationLog.push(logEntry);
+  
+  // Keep only last entries
+  if (notificationLog.length > MAX_LOG_ENTRIES) {
+    notificationLog = notificationLog.slice(-MAX_LOG_ENTRIES);
+  }
+
+  // Save to localStorage for persistence
+  try {
+    localStorage.setItem('spendvista_notification_log', JSON.stringify(notificationLog));
+  } catch (e) {
+    console.warn('Could not save to localStorage:', e);
+  }
+
+  // Format for console with consistent tag for easy filtering in logcat
+  const tag = 'SPENDVISTA';
+  const consoleMessage = `[${tag}] [${level.toUpperCase()}] ${message}`;
+  const dataStr = data ? `\n📊 Data: ${JSON.stringify(data, null, 2)}` : '';
+
+  // Log to console (will appear in adb logcat)
+  switch (level) {
+    case 'error':
+      console.error(`❌ ${consoleMessage}${dataStr}`);
+      break;
+    case 'warning':
+      console.warn(`⚠️ ${consoleMessage}${dataStr}`);
+      break;
+    case 'sms':
+      console.log(`📲 ${consoleMessage}${dataStr}`);
+      break;
+    case 'success':
+      console.log(`✅ ${consoleMessage}${dataStr}`);
+      break;
+    default:
+      console.log(`ℹ️ ${consoleMessage}${dataStr}`);
+  }
+}
+
+// 🏦 Check if notification is from a bank app
+function isBankNotification(notification) {
+  const bankKeywords = [
+    'hdfc', 'icici', 'axis', 'sbi', 'bob', 'boi', // Banks
+    'gpay', 'googlepay', 'paytm', 'phonepe', 'whatsapp', // Payment apps
+    'upi', 'transfer', 'transaction', 'debit', 'credit', 'amount',
+    'balance', 'payment', 'transaction', 'deposit', 'withdrawal',
+    'bank', 'card', 'account', 'alert'
+  ];
+
+  const text = JSON.stringify(notification).toLowerCase();
+  return bankKeywords.some(keyword => text.includes(keyword));
+}
+
+// ✅ Setup Push Listeners with Comprehensive Logging
 function setupPushListeners() {
   if (listenersInitialized) {
-    console.log('🔔 [PUSH] Listeners already initialized');
+    logNotificationEvent('info', '🔔 Listeners already initialized');
     return;
   }
 
   listenersInitialized = true;
-  console.log('🔔 [PUSH] Initializing listeners...');
+  logNotificationEvent('info', '🔔 Initializing push notification listeners...');
+  logNotificationEvent('info', '📡 Listening for: Firebase Push Notifications (FCM)');
+  logNotificationEvent('info', '💡 For bank SMS: Go to Settings → Apps → Notifications → Notification Access → Enable Spend Vista');
 
+  // Listen to FCM Token Registration
   PushNotifications.addListener('registration', async token => {
-    console.log('🔥 [PUSH] FCM TOKEN:', token.value);
+    logNotificationEvent('info', '🔥 FCM TOKEN REGISTERED', {
+      token: token.value,
+      length: token.value.length
+    });
 
     try {
-      await fetch('https://stagev2.spendvista.com/api/app-save-fcm-token', {
+      const response = await fetch('https://stagev2.spendvista.com/api/app-save-fcm-token', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify({ fcm_token: token.value }),
         credentials: 'include'
       });
-      console.log('✅ [PUSH] Token sent to server');
+      
+      if (response.ok) {
+        const data = await response.json();
+        logNotificationEvent('success', '✅ FCM Token sent to server successfully', data);
+      } else {
+        logNotificationEvent('warning', '⚠️ Server returned error for token', { 
+          status: response.status,
+          statusText: response.statusText
+        });
+      }
     } catch (err) {
-      console.error('❌ [PUSH] Token API error:', err);
+      logNotificationEvent('error', '❌ Failed to send FCM token to server', {
+        error: err.message
+      });
     }
   });
 
+  // Handle Registration Errors
   PushNotifications.addListener('registrationError', err => {
-    console.error('❌ [PUSH] Registration failed:', err);
+    logNotificationEvent('error', '❌ Push registration failed', {
+      error: err.message || String(err)
+    });
   });
 
-  PushNotifications.addListener('pushNotificationReceived', notification => {
-    console.log('📢 [PUSH] Notification received:', notification);
+  // 📲 Listen to Notifications Received (App in Background or Foreground)
+  PushNotifications.addListener('pushNotificationReceived', async notification => {
+    const isBankNotif = isBankNotification(notification);
+    const logLevel = isBankNotif ? 'sms' : 'info';
+    
+    logNotificationEvent(logLevel, `📢 NOTIFICATION RECEIVED ${isBankNotif ? '(BANK/PAYMENT)' : ''}`, {
+      title: notification.title,
+      body: notification.body,
+      data: notification.data,
+      raw: JSON.stringify(notification, null, 2),
+      isBank: isBankNotif
+    });
+
+    // Send notification data to Laravel backend
+    await sendNotificationToBackend('received', notification, isBankNotif);
   });
 
-  PushNotifications.addListener('pushNotificationActionPerformed', action => {
-    console.log('👆 [PUSH] Notification clicked:', action);
+  // 👆 Listen to Notification Actions (User Interaction)
+  PushNotifications.addListener('pushNotificationActionPerformed', async action => {
+    const isBankNotif = isBankNotification(action.notification);
+    
+    logNotificationEvent(logLevel, `👆 NOTIFICATION ACTION ${isBankNotif ? '(BANK/PAYMENT)' : ''}`, {
+      actionId: action.actionId,
+      inputValue: action.inputValue,
+      notification: {
+        title: action.notification?.title,
+        body: action.notification?.body
+      },
+      isBank: isBankNotif
+    });
+
+    // Send notification action to Laravel backend
+    await sendNotificationToBackend('action', action, isBankNotif);
   });
+}
+
+// 🔄 Send Notification Data to Laravel Backend with Logging
+async function sendNotificationToBackend(eventType, data, isBankNotif = false) {
+  try {
+    const payload = {
+      event_type: eventType,
+      timestamp: new Date().toISOString(),
+      is_bank_notification: isBankNotif,
+      device_info: {
+        platform: Capacitor.getPlatform(),
+        app_version: '1.0.0'
+      },
+      notification_data: {
+        title: data.notification?.title || data.title || null,
+        body: data.notification?.body || data.body || null,
+        data: data.data || {},
+        raw_notification: JSON.stringify(data)
+      }
+    };
+
+    logNotificationEvent('info', `📤 Sending ${isBankNotif ? 'BANK SMS' : 'notification'} to backend`, {
+      eventType,
+      isBank: isBankNotif,
+      title: payload.notification_data.title
+    });
+
+    const response = await fetch('https://stagev2.spendvista.com/api/app-notification-log', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(payload),
+      credentials: 'include'
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      logNotificationEvent('success', `✅ ${isBankNotif ? 'Bank SMS' : 'Notification'} logged on backend`, {
+        responseStatus: 'success',
+        messageId: result.id || result.message_id
+      });
+    } else {
+      logNotificationEvent('warning', '⚠️ Backend returned error', { 
+        status: response.status,
+        isBank: isBankNotif
+      });
+    }
+  } catch (err) {
+    logNotificationEvent('error', `❌ Failed to send ${isBankNotif ? 'bank SMS' : 'notification'} to backend`, {
+      error: err.message
+    });
+  }
 }
 
 // ✅ Request Permission (SAFE VERSION)
 async function requestPushPermission() {
   try {
-    console.log('🔔 [PUSH] Checking permission...');
+    logNotificationEvent('info', '🔔 Checking notification permission...');
 
     let permission = await PushNotifications.checkPermissions();
-    console.log('🔔 [PUSH] Current:', permission);
+    logNotificationEvent('info', '🔔 Current permission status', permission);
 
     if (permission.receive !== 'granted') {
-      console.log('🔔 [PUSH] Requesting permission...');
+      logNotificationEvent('info', '🔔 Requesting notification permission...');
       permission = await PushNotifications.requestPermissions();
-      console.log('🔔 [PUSH] After request:', permission);
+      logNotificationEvent('info', '🔔 Permission request response', permission);
     }
 
     if (permission.receive === 'granted') {
-      console.log('✅ [PUSH] Permission granted');
+      logNotificationEvent('success', '✅ Notification permission GRANTED');
 
       if (!window.__pushRegistered) {
-        console.log('🔔 [PUSH] Registering device...');
+        logNotificationEvent('info', '🔔 Registering device for push notifications...');
         await PushNotifications.register();
         window.__pushRegistered = true;
+        logNotificationEvent('success', '✅ Device registered for push notifications');
       } else {
-        console.log('🔁 [PUSH] Already registered');
+        logNotificationEvent('info', '🔁 Device already registered for push');
       }
 
+      // Initialize listeners after successful registration
+      setupPushListeners();
       return true;
     }
 
-    console.warn('❌ [PUSH] Permission not granted');
+    logNotificationEvent('warning', '⚠️ Notification permission NOT granted');
     return false;
 
   } catch (err) {
-    console.error('❌ [PUSH] Permission error:', err);
+    logNotificationEvent('error', '❌ Permission request failed', {
+      error: err.message
+    });
     return false;
   }
 }
 
 // 🔔 Trigger after login
 async function requestPushPermissionAfterLogin() {
-  console.log('🔔 [PUSH] Login detected → requesting permission');
+  logNotificationEvent('info', '🔔 Login detected → requesting push permission');
 
   if (!Capacitor.isNativePlatform()) {
-    console.warn('⚠️ Not native platform');
+    logNotificationEvent('warning', '⚠️ Not on native platform - push notifications may not work');
     return;
   }
 
@@ -97,6 +273,49 @@ async function requestPushPermissionAfterLogin() {
   await new Promise(res => setTimeout(res, 800));
   return await requestPushPermission();
 }
+
+// 📋 Get Notification Log (for debugging)
+function getNotificationLog() {
+  return notificationLog;
+}
+
+// 📋 Clear Notification Log
+function clearNotificationLog() {
+  notificationLog = [];
+  localStorage.removeItem('spendvista_notification_log');
+  logNotificationEvent('info', '🗑️ Notification log cleared');
+  return true;
+}
+
+// 📋 Export Notification Log as File
+function exportNotificationLog() {
+  const dataStr = JSON.stringify(notificationLog, null, 2);
+  const dataBlob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(dataBlob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `notification_log_${new Date().toISOString().slice(0, 19)}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+  logNotificationEvent('info', '📥 Notification log exported as JSON');
+}
+
+// 🔌 Export for external use
+export {
+  setupPushListeners,
+  requestPushPermission,
+  requestPushPermissionAfterLogin,
+  sendNotificationToBackend,
+  getNotificationLog,
+  clearNotificationLog,
+  exportNotificationLog,
+  isBankNotification,
+  logNotificationEvent,
+  DeveloperMode,
+  BankSmsRetriever
+};
 
 // 👀 Watch URL changes (SPA safe)
 function watchLoginAndRequestPermission() {

@@ -10,7 +10,6 @@ import android.webkit.WebView;
 import android.widget.Toast;
 import androidx.core.app.ActivityCompat;
 import android.os.Handler;
-import com.spendvista.app.plugins.BankSmsRetrieverPlugin;
 import com.capacitorjs.plugins.pushnotifications.PushNotificationsPlugin;
 import com.getcapacitor.BridgeActivity;
 import com.getcapacitor.PluginHandle;
@@ -23,12 +22,22 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
         registerPlugin(BankSmsRetrieverPlugin.class);
+        Log.d(TAG, "✅ [NATIVE] Registered: BankSmsRetrieverPlugin");
+        
         registerPlugin(PushNotificationsPlugin.class);
-
+        Log.d(TAG, "✅ [NATIVE] Registered: PushNotificationsPlugin");
+        
+        registerPlugin(NotificationListenerPlugin.class);
+        Log.d(TAG, "✅ [NATIVE] Registered: NotificationListenerPlugin");
+        
         registerPlugin(NotificationAccessPlugin.class);
-    registerPlugin(SmsNotificationListenerPlugin.class);
+        Log.d(TAG, "✅ [NATIVE] Registered: NotificationAccessPlugin");
+        
+        registerPlugin(SmsSyncPlugin.class);
+        Log.d(TAG, "✅ [NATIVE] Registered: SmsSyncPlugin");
+
+        super.onCreate(savedInstanceState);
         
         // 🚀 Start URL Poller for login detection
         handler.post(urlPoller);

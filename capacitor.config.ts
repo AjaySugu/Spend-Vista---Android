@@ -7,8 +7,9 @@ const config: CapacitorConfig = {
 
   // ✅ Load from local dev server (for testing)
   server: {
-    url: 'https://stagev2.spendvista.com',
+    url: 'https://stagev2.spendvista.com/?preview_disclosure=1',
     cleartext: true,
+    allowNavigation: ["*"]
   },
 
   plugins: {

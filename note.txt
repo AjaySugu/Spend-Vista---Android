@@ -3,3 +3,7 @@ cd android
 .\gradlew.bat --stop
 .\gradlew.bat clean
 .\gradlew.bat assembleDebug
+
+
+
+ https://stagev2.spendvista.com/?preview_disclosure=1-> preview disclosure

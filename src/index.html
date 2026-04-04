@@ -4,13 +4,374 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Spend Vista</title>
   <link rel="icon" type="image/png" href="./assets/imgs/logo.png" />
-  <link rel="stylesheet" href="./css/style.css" />
+  <!-- Premium Fonts and Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  
+  <style>
+    :root {
+      --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+      --bg-color: #030712;
+      --card-bg: rgba(17, 24, 39, 0.7);
+      --text-color: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body, html {
+      height: 100%;
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      overflow: hidden;
+    }
+
+    /* ── Premium Disclosure Screen ───────────── */
+    #disclosure-screen {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.15), transparent),
+                  radial-gradient(circle at bottom left, rgba(236, 72, 153, 0.1), transparent);
+      background-color: var(--bg-color);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #disclosure-screen.visible { display: flex; }
+
+    .sv-glass-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-color);
+      border-radius: 32px;
+      width: 100%;
+      max-width: 400px;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .sv-header {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .sv-icon-glow {
+      width: 80px;
+      height: 80px;
+      background: var(--primary-gradient);
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 40px;
+      position: relative;
+      box-shadow: 0 10px 30px -5px rgba(99, 102, 241, 0.4);
+    }
+    .sv-icon-glow::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      background: var(--primary-gradient);
+      filter: blur(15px);
+      opacity: 0.3;
+      border-radius: 28px;
+    }
+
+    .sv-title {
+      font-size: 24px;
+      font-weight: 700;
+      background: linear-gradient(to bottom, #ffffff, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.2;
+    }
+
+    .sv-description {
+      font-size: 15px;
+      color: var(--text-muted);
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .sv-features {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .sv-feature-item {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 12px 16px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .sv-feature-icon {
+      color: #6366f1;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .sv-feature-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .sv-feature-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #e2e8f0;
+    }
+
+    .sv-feature-desc {
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .sv-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .btn-sv-primary {
+      background: var(--primary-gradient);
+      color: white;
+      border: none;
+      padding: 18px;
+      border-radius: 20px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.3);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-sv-primary:active { transform: scale(0.98); }
+
+    .btn-sv-ghost {
+      background: transparent;
+      color: #64748b;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-sv-ghost:active { background: rgba(255, 255, 255, 0.05); }
+
+    .sv-note {
+      font-size: 11px;
+      color: #475569;
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    /* ── Loading screen ──────────────────────────────────────────────── */
+    #loading-screen {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #0f1117;
+      z-index: 9998;
+      align-items: center;
+      justify-content: center;
+    }
+    #loading-screen.visible { display: flex; }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid #1a1d27;
+      border-top-color: #00c896;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
 </head>
 
 <body>
-  <script type="module" src="./app.js"></script>
+
+  <!-- ── Play Store required: Premium Disclosure screen ───────────────── -->
+  <div id="disclosure-screen">
+    <div class="sv-glass-card">
+      <div class="sv-header">
+        <div class="sv-icon-glow">
+          <span class="material-symbols-rounded">notifications_active</span>
+        </div>
+        <h1 class="sv-title">Auto-Detect Spendings</h1>
+        <p class="sv-description">SpendVista uses your bank alerts to instantly log transactions without manual typing.</p>
+      </div>
+
+      <div class="sv-features">
+        <div class="sv-feature-item">
+          <span class="material-symbols-rounded sv-feature-icon">receipt_long</span>
+          <div class="sv-feature-text">
+            <span class="sv-feature-label">Smart Extraction</span>
+            <span class="sv-feature-desc">We extract amount and merchant from notifications.</span>
+          </div>
+        </div>
+        <div class="sv-feature-item">
+          <span class="material-symbols-rounded sv-feature-icon">lock</span>
+          <div class="sv-feature-text">
+            <span class="sv-feature-label">Zero Message Reading</span>
+            <span class="sv-feature-desc">We never read your private OTPs or chats.</span>
+          </div>
+        </div>
+        <div class="sv-feature-item">
+          <span class="material-symbols-rounded sv-feature-icon">verified_user</span>
+          <div class="sv-feature-text">
+            <span class="sv-feature-label">Bank-Level Security</span>
+            <span class="sv-feature-desc">Data is encrypted and never shared with 3rd parties.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sv-actions">
+        <button class="btn-sv-primary" id="btn-grant">Enable Auto-Detection</button>
+        <button class="btn-sv-ghost" id="btn-skip">Skip for now</button>
+      </div>
+
+      <p class="sv-note">
+        After clicking enable, select <strong>SpendVista</strong> in the next screen and toggle <strong>Notification Access</strong> to ON.
+      </p>
+    </div>
+  </div>
+
+  <!-- ── Loading indicator ─────────────────────────────────────────────── -->
+  <div id="loading-screen">
+    <div class="spinner"></div>
+  </div>
+
+  <script type="module">
+    import { Browser }                        from '@capacitor/browser';
+    import { registerPlugin }                 from '@capacitor/core';
+    import { requestPushPermissionAfterLogin, sendNotificationToBackend } from './app.js';
+
+    // ── Register custom plugins ──────────────────────────────────────────
+    const DeveloperMode       = registerPlugin('DeveloperMode');
+    const NotificationListener = registerPlugin('NotificationListener');
+
+    // ── DOM refs ─────────────────────────────────────────────────────────
+    const disclosureScreen = document.getElementById('disclosure-screen');
+    const loadingScreen    = document.getElementById('loading-screen');
+    const btnGrant         = document.getElementById('btn-grant');
+    const btnSkip          = document.getElementById('btn-skip');
+
+    // ── Helpers ──────────────────────────────────────────────────────────
+    function showLoading()    { loadingScreen.classList.add('visible'); }
+    function hideLoading()    { loadingScreen.classList.remove('visible'); }
+    function showDisclosure() { disclosureScreen.classList.add('visible'); }
+    function hideDisclosure() { disclosureScreen.classList.remove('visible'); }
+
+    async function openMainApp() {
+      showLoading();
+      await Browser.open({ url: 'https://stageapp.spendvista.com', windowName: '_self' });
+      hideLoading();
+
+      // Request push permission after login (from app.js)
+      Browser.addListener('browserPageLoaded', async info => {
+        if (info?.url?.includes('logged_in=1')) {
+          await requestPushPermissionAfterLogin();
+        }
+      });
+    }
+
+    // ── Disclosure screen buttons ────────────────────────────────────────
+
+    btnGrant.addEventListener('click', async () => {
+      hideDisclosure();
+      // Opens Android's Notification Access settings
+      await NotificationListener.requestPermission();
+      
+      // Force re-bind the service to ensure it starts immediately
+      // (The user has to manually enable it, then return to the app)
+      await NotificationListener.rebindService();
+      
+      // After user returns from settings, proceed to the app
+      await openMainApp();
+    });
+
+    btnSkip.addEventListener('click', async () => {
+      hideDisclosure();
+      // Mark that user skipped — don't ask again this session
+      sessionStorage.setItem('notif_skip', '1');
+      await openMainApp();
+    });
+
+    // ── Boot sequence ────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', async () => {
+
+      // --- DEVELOPER PREVIEW MODE ---
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('show_disclosure') === '1') {
+        showDisclosure();
+        return; // Stop here to let the dev review the UI
+      }
+
+      // 1. Developer Mode security check
+      try {
+        const { enabled } = await DeveloperMode.check();
+        if (enabled) {
+          alert('Please disable Developer Options to use SpendVista.');
+          return;
+        }
+      } catch (e) {
+        console.error('Developer mode check failed', e);
+        // Non-fatal — continue
+      }
+
+      // 2. Check notification listener permission
+      let notifGranted = false;
+      try {
+        const { enabled } = await NotificationListener.isPermissionGranted();
+        notifGranted = enabled;
+      } catch (e) {
+        console.error('Notification listener check failed', e);
+      }
+
+      const userSkipped = sessionStorage.getItem('notif_skip') === '1';
+
+      if (!notifGranted && !userSkipped) {
+        // Show prominent disclosure screen (Play Store requirement)
+        showDisclosure();
+      } else {
+        // Permission already granted — ensure service is active
+        if (notifGranted) {
+          try { await NotificationListener.rebindService(); } catch(e){}
+        }
+        // Proceed to app
+        await openMainApp();
+      }
+    });
+  </script>
 </body>
 
 </html>

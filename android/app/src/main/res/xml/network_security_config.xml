@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Allow cleartext traffic to staging server for development -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">stagev2.spendvista.com</domain>
+        <domain includeSubdomains="true">stageapp.spendvista.com</domain>
+    </domain-config>
+    
+    <!-- Production should use HTTPS only -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">spendvista.com</domain>
+    </domain-config>
+</network-security-config>

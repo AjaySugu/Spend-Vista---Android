@@ -1,4 +1,4 @@
-package com.spendvista.app.plugins;
+package com.spendvista.app;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

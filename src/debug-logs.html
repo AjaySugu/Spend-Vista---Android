@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notification Debug Logs - Spend Vista</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Monaco', 'Courier New', monospace;
+      background: #0f1117;
+      color: #c9d1d9;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      background: linear-gradient(135deg, #00c896, #0095ff);
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      color: white;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 5px;
+    }
+
+    .subtitle {
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+
+    .btn-primary {
+      background: #00c896;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #00a876;
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background: #1f6feb;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #1854d9;
+    }
+
+    .btn-danger {
+      background: #da3633;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #b91c1c;
+    }
+
+    .btn-warning {
+      background: #d29922;
+      color: white;
+    }
+
+    .btn-warning:hover {
+      background: #b88817;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .stat-box {
+      background: #161b22;
+      border-left: 4px solid #00c896;
+      padding: 15px;
+      border-radius: 6px;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #00c896;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: #8b949e;
+      margin-top: 5px;
+    }
+
+    .stat-box.error {
+      border-left-color: #da3633;
+    }
+
+    .stat-box.error .stat-value {
+      color: #da3633;
+    }
+
+    .stat-box.warning {
+      border-left-color: #d29922;
+    }
+
+    .stat-box.warning .stat-value {
+      color: #d29922;
+    }
+
+    .stat-box.bank {
+      border-left-color: #79c0ff;
+    }
+
+    .stat-box.bank .stat-value {
+      color: #79c0ff;
+    }
+
+    .logs-container {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      overflow: hidden;
+      max-height: 600px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .logs-header {
+      background: #161b22;
+      padding: 12px 16px;
+      border-bottom: 1px solid #30363d;
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .logs-content {
+      overflow-y: auto;
+      flex: 1;
+      padding: 0;
+    }
+
+    .log-entry {
+      padding: 12px 16px;
+      border-bottom: 1px solid #21262d;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .log-entry:hover {
+      background: #0f1117;
+    }
+
+    .log-entry.success {
+      color: #3fb950;
+    }
+
+    .log-entry.error {
+      color: #da3633;
+    }
+
+    .log-entry.warning {
+      color: #d29922;
+    }
+
+    .log-entry.sms {
+      color: #79c0ff;
+      font-weight: 600;
+      background: rgba(121, 192, 255, 0.05);
+    }
+
+    .log-entry.info {
+      color: #8b949e;
+    }
+
+    .log-time {
+      color: #6e7681;
+      margin-right: 8px;
+    }
+
+    .log-level {
+      display: inline-block;
+      min-width: 60px;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-right: 8px;
+    }
+
+    .log-message {
+      margin-top: 2px;
+    }
+
+    .log-data {
+      background: #161b22;
+      padding: 8px;
+      margin-top: 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      color: #79c0ff;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .no-logs {
+      padding: 40px;
+      text-align: center;
+      color: #6e7681;
+      font-style: italic;
+    }
+
+    .filter-bar {
+      background: #161b22;
+      padding: 12px 16px;
+      border-bottom: 1px solid #30363d;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .filter-btn {
+      padding: 6px 12px;
+      border: 1px solid #30363d;
+      background: transparent;
+      color: #8b949e;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-btn:hover {
+      border-color: #58a6ff;
+      color: #58a6ff;
+    }
+
+    .filter-btn.active {
+      background: #00c896;
+      border-color: #00c896;
+      color: white;
+    }
+
+    @media (max-width: 768px) {
+      .controls {
+        flex-direction: column;
+      }
+
+      button {
+        width: 100%;
+      }
+
+      .stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .success-badge {
+      display: inline-block;
+      background: #238636;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 10px;
+      margin-left: 8px;
+    }
+
+    .badge-bank {
+      display: inline-block;
+      background: #0969da;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 10px;
+      margin-left: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🔔 Notification Debug Logs</h1>
+      <p class="subtitle">Real-time tracking of bank SMS and push notifications</p>
+    </header>
+
+    <div class="controls">
+      <button class="btn-primary" onclick="refreshLogs()">🔄 Refresh</button>
+      <button class="btn-secondary" onclick="exportLogs()">📥 Export as JSON</button>
+      <button class="btn-warning" onclick="clearLogs()">🗑️ Clear Logs</button>
+      <button class="btn-secondary" onclick="copyLogsToClipboard()">📋 Copy to Clipboard</button>
+      <label style="display: flex; align-items: center; gap: 8px; color: #8b949e; cursor: pointer;">
+        <input type="checkbox" id="autoRefresh" checked onchange="toggleAutoRefresh()">
+        Auto-refresh (5s)
+      </label>
+    </div>
+
+    <div class="stats">
+      <div class="stat-box">
+        <div class="stat-value" id="totalLogs">0</div>
+        <div class="stat-label">Total Events</div>
+      </div>
+      <div class="stat-box bank">
+        <div class="stat-value" id="bankLogs">0</div>
+        <div class="stat-label">Bank SMS Detected</div>
+      </div>
+      <div class="stat-box error">
+        <div class="stat-value" id="errorLogs">0</div>
+        <div class="stat-label">Errors</div>
+      </div>
+      <div class="stat-box warning">
+        <div class="stat-value" id="warningLogs">0</div>
+        <div class="stat-label">Warnings</div>
+      </div>
+    </div>
+
+    <div class="logs-container">
+      <div class="logs-header">📋 Event Log (Last 100)</div>
+      <div class="filter-bar">
+        <span style="color: #6e7681; font-size: 12px;">Filter:</span>
+        <button class="filter-btn active" onclick="filterLogs('all')">All</button>
+        <button class="filter-btn" onclick="filterLogs('sms')">📲 Bank SMS</button>
+        <button class="filter-btn" onclick="filterLogs('success')">✅ Success</button>
+        <button class="filter-btn" onclick="filterLogs('error')">❌ Error</button>
+        <button class="filter-btn" onclick="filterLogs('warning')">⚠️ Warning</button>
+      </div>
+      <div class="logs-content" id="logsContent">
+        <div class="no-logs">No logs yet. Waiting for notifications...</div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { getNotificationLog, clearNotificationLog, exportNotificationLog } from './app.js';
+
+    let currentFilter = 'all';
+    let autoRefreshInterval = null;
+
+    // Load logs from localStorage if app.js doesn't expose them
+    function getLogs() {
+      try {
+        const stored = localStorage.getItem('spendvista_notification_log');
+        return stored ? JSON.parse(stored) : [];
+      } catch (e) {
+        console.error('Failed to load logs:', e);
+        return [];
+      }
+    }
+
+    function refreshLogs() {
+      const logs = getLogs();
+      const logsContent = document.getElementById('logsContent');
+      
+      // Calculate stats
+      const totalLogs = logs.length;
+      const bankLogs = logs.filter(l => l.data?.isBank || l.message.includes('BANK') || l.message.includes('SMS')).length;
+      const errorLogs = logs.filter(l => l.level === 'error').length;
+      const warningLogs = logs.filter(l => l.level === 'warning').length;
+
+      document.getElementById('totalLogs').textContent = totalLogs;
+      document.getElementById('bankLogs').textContent = bankLogs;
+      document.getElementById('errorLogs').textContent = errorLogs;
+      document.getElementById('warningLogs').textContent = warningLogs;
+
+      // Filter logs
+      let filteredLogs = logs;
+      if (currentFilter === 'sms') {
+        filteredLogs = logs.filter(l => l.message.includes('BANK') || l.message.includes('SMS') || l.data?.isBank);
+      } else if (currentFilter !== 'all') {
+        filteredLogs = logs.filter(l => l.level === currentFilter);
+      }
+
+      // Display logs (last 100)
+      if (filteredLogs.length === 0) {
+        logsContent.innerHTML = '<div class="no-logs">No logs matching filter...</div>';
+        return;
+      }
+
+      logsContent.innerHTML = filteredLogs
+        .slice(-100)
+        .reverse()
+        .map(log => `
+          <div class="log-entry ${log.level}">
+            <span class="log-time">[${new Date(log.timestamp).toLocaleTimeString()}]</span>
+            <span class="log-level">${log.level}</span>
+            <span>${log.message}</span>
+            ${log.data?.isBank ? '<span class="badge-bank">BANK SMS</span>' : ''}
+            ${log.data ? `<div class="log-data">${JSON.stringify(log.data, null, 2)}</div>` : ''}
+          </div>
+        `)
+        .join('');
+    }
+
+    function filterLogs(type) {
+      currentFilter = type;
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      event.target.classList.add('active');
+      refreshLogs();
+    }
+
+    function clearLogs() {
+      if (confirm('Are you sure you want to clear all logs?')) {
+        clearNotificationLog();
+        refreshLogs();
+      }
+    }
+
+    function exportLogs() {
+      const logs = getLogs();
+      const dataStr = JSON.stringify(logs, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `notification_log_${new Date().toISOString().slice(0, 19)}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    function copyLogsToClipboard() {
+      const logs = getLogs();
+      const text = logs.map(l => 
+        `[${l.timestamp}] ${l.level.toUpperCase()}: ${l.message} ${l.data ? JSON.stringify(l.data) : ''}`
+      ).join('\n');
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Logs copied to clipboard!');
+      });
+    }
+
+    function toggleAutoRefresh() {
+      if (document.getElementById('autoRefresh').checked) {
+        autoRefreshInterval = setInterval(refreshLogs, 5000);
+      } else {
+        clearInterval(autoRefreshInterval);
+      }
+    }
+
+    // Initial load and auto-refresh
+    refreshLogs();
+    if (document.getElementById('autoRefresh').checked) {
+      autoRefreshInterval = setInterval(refreshLogs, 5000);
+    }
+
+    // Expose to window for manual refresh
+    window.refreshLogs = refreshLogs;
+    window.filterLogs = filterLogs;
+    window.clearLogs = clearLogs;
+    window.exportLogs = exportLogs;
+    window.copyLogsToClipboard = copyLogsToClipboard;
+    window.toggleAutoRefresh = toggleAutoRefresh;
+  </script>
+</body>
+</html>

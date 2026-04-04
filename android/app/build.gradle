@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'com.google.firebase.appdistribution'
 
 android {
     namespace = "com.spendvista.app"
@@ -20,6 +21,7 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debug
         }
     }
 }
@@ -52,4 +54,12 @@ try {
     }
 } catch(Exception e) {
     logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}
+
+// Firebase App Distribution Configuration
+firebaseAppDistribution {
+    // This configuration is optional here - you can also provide these values via command line
+    // releaseNotesFile = "release-notes.txt"
+    // testers = "user1@example.com,user2@example.com"
+    // groups = "internal-testers"
 }

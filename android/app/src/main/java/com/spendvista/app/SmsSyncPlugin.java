@@ -1,6 +1,8 @@
-package com.spendvista.app.plugins;
+package com.spendvista.app;
 
 import android.Manifest;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.util.Log;
@@ -19,29 +21,33 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-@CapacitorPlugin(
-    name = "SmsSync",
-    permissions = {
-        @Permission(
-            alias = "sms",
-            strings = { Manifest.permission.READ_SMS }
-        )
-    }
-)
+@CapacitorPlugin(name = "SmsSync")
 public class SmsSyncPlugin extends Plugin {
-
     private static final String TAG = "SmsSyncPlugin";
+
     // Regex matches any of the keywords case-insensitively
     private static final String KEYWORD_REGEX = "(?i).*\\b(debited|credited|withdrawn|spent|inr|rs)\\b.*";
 
     @PluginMethod
+    public void saveToken(PluginCall call) {
+        String token = call.getString("token");
+        Log.d(TAG, "📡 [NATIVE-BRIDGE] Received saveToken request. Token length: " + (token != null ? token.length() : "NULL"));
+        if (token != null) {
+            SharedPreferences prefs = getContext().getSharedPreferences("SmsSyncPrefs", Context.MODE_PRIVATE);
+            prefs.edit().putString("auth_token", token).apply();
+            Log.d(TAG, "Auth token saved successfully");
+            call.resolve();
+        } else {
+            call.reject("Token is null");
+        }
+    }
+
+    @PluginMethod
     public void importSms(PluginCall call) {
-        // 1. Request READ_SMS permission at runtime (if not already granted).
         if (getPermissionState("sms") != PermissionState.GRANTED) {
             requestPermissionForAlias("sms", call, "smsPermsCallback");
             return;
         }
-
         performSmsImport(call);
     }
 
@@ -57,8 +63,6 @@ public class SmsSyncPlugin extends Plugin {
     private void performSmsImport(PluginCall call) {
         JSArray results = new JSArray();
         Uri inboxUri = Uri.parse("content://sms/inbox");
-        
-        // 2. Read last 200 SMS from inbox
         String sortOrder = "date DESC LIMIT 200";
 
         try (Cursor cursor = getContext().getContentResolver().query(inboxUri, null, null, null, sortOrder)) {
@@ -72,7 +76,6 @@ public class SmsSyncPlugin extends Plugin {
                     String sender = cursor.getString(addressIndex);
                     long dateMillis = cursor.getLong(dateIndex);
 
-                    // 3. Filter only bank-related messages using keywords
                     if (body != null && body.matches(KEYWORD_REGEX)) {
                         JSObject smsObj = new JSObject();
                         smsObj.put("sender", sender);
@@ -80,7 +83,6 @@ public class SmsSyncPlugin extends Plugin {
                         
                         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
                         smsObj.put("date", sdf.format(new Date(dateMillis)));
-
                         results.put(smsObj);
                     }
                 } while (cursor.moveToNext());
@@ -91,7 +93,6 @@ public class SmsSyncPlugin extends Plugin {
             return;
         }
 
-        // 4. Return the filtered messages to JS in JSON format
         JSObject response = new JSObject();
         response.put("messages", results);
         call.resolve(response);
