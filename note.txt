@@ -7,3 +7,8 @@ cd android
 
 
  https://stagev2.spendvista.com/?preview_disclosure=1-> preview disclosure
+
+
+For Log
+adb shell pidof com.spendvista.app                                                              
+adb logcat --pid=7871

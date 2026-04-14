@@ -156,6 +156,9 @@ public class BankNotificationService extends NotificationListenerService {
     private static final String BACKEND_URL =
             "https://stagev2.spendvista.com/api/app-save-bank-notification";
 
+    private static final String TOGGLE_SYNC_URL =
+            "https://stagev2.spendvista.com/api/sms/toggle-sync";
+
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     // -------------------------------------------------------------------------
@@ -166,12 +169,58 @@ public class BankNotificationService extends NotificationListenerService {
     public void onListenerConnected() {
         super.onListenerConnected();
         Log.i(TAG, "Notification Listener Connected! ✅ Service is now active.");
+        syncPermissionStatus(true);
     }
 
     @Override
     public void onListenerDisconnected() {
         super.onListenerDisconnected();
         Log.w(TAG, "Notification Listener Disconnected! ❌");
+        syncPermissionStatus(false);
+    }
+
+    /**
+     * POSTs the current notification listener enabled/disabled status
+     * to /api/sms/toggle-sync with the stored Bearer token.
+     */
+    private void syncPermissionStatus(boolean enabled) {
+        executor.submit(() -> {
+            try {
+                SharedPreferences prefs = getSharedPreferences("SmsSyncPrefs", Context.MODE_PRIVATE);
+                String token = prefs.getString("auth_token", null);
+
+                if (token == null) {
+                    Log.w(TAG, "⚠️ No auth token found. Skipping permission sync.");
+                    return;
+                }
+
+                JSONObject json = new JSONObject();
+                json.put("enabled", enabled);
+
+                byte[] body = json.toString().getBytes(StandardCharsets.UTF_8);
+
+                URL url = new URI(TOGGLE_SYNC_URL).toURL();
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/json");
+                conn.setRequestProperty("Accept", "application/json");
+                conn.setRequestProperty("Authorization", "Bearer " + token);
+                conn.setDoOutput(true);
+                conn.setConnectTimeout(10_000);
+                conn.setReadTimeout(10_000);
+
+                try (OutputStream os = conn.getOutputStream()) {
+                    os.write(body);
+                }
+
+                int code = conn.getResponseCode();
+                Log.d(TAG, "✅ Permission sync (" + (enabled ? "CONNECTED" : "DISCONNECTED") + ") response: " + code);
+                conn.disconnect();
+
+            } catch (Exception e) {
+                Log.e(TAG, "❌ Failed to sync permission status", e);
+            }
+        });
     }
 
     @Override

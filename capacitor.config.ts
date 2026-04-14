@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'Spend Vista',
   webDir: 'dist',
 
-  // ✅ Load from local dev server (for testing)
+  // ✅ Load from remote staging URL
   server: {
     url: 'https://stagev2.spendvista.com/?preview_disclosure=1',
     cleartext: true,

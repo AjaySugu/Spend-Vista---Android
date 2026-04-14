@@ -69,7 +69,7 @@
 
         <!-- ── Firebase / Capacitor Push Notifications ── -->
         <service
-            android:name="com.getcapacitor.plugin.PushNotificationsService"
+            android:name="com.capacitorjs.plugins.pushnotifications.MessagingService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>

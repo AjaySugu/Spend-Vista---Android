@@ -35,12 +35,19 @@ public class NotificationListenerPlugin extends Plugin {
     @PluginMethod
     public void requestPermission(PluginCall call) {
         try {
+            // 🚥 Set native flag to delay Push Notification popups
+            MainActivity.isRedirectingToSettings = true;
+            
             Intent intent = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY); // Ensure it doesn't linger in backstack
+            intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+            
             getContext().startActivity(intent);
             call.resolve();
         } catch (Exception e) {
-            call.reject("Failed to open settings", e);
+            MainActivity.isRedirectingToSettings = false; // Reset on failure
+            call.reject("Failed to open settings: " + e.getMessage());
         }
     }
 
@@ -67,6 +74,17 @@ public class NotificationListenerPlugin extends Plugin {
         } catch (Exception e) {
             call.reject("Failed to rebind service", e);
         }
+    }
+
+    /**
+     * Check if the app is currently in the middle of a redirection to settings.
+     * Used by the JS bridge guard to sequence permission popups.
+     */
+    @PluginMethod
+    public void isRedirectStatus(PluginCall call) {
+        JSObject ret = new JSObject();
+        ret.put("isRedirecting", MainActivity.isRedirectingToSettings);
+        call.resolve(ret);
     }
 
     // -------------------------------------------------------------------------

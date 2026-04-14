@@ -43,6 +43,16 @@ public class SmsSyncPlugin extends Plugin {
     }
 
     @PluginMethod
+    public void startSync(PluginCall call) {
+        Log.d(TAG, "🔄 [NATIVE-BRIDGE] Received startSync request.");
+        // Implementation for starting background sync can go here.
+        // For now, just resolve to prevent JS errors on the remote site.
+        JSObject ret = new JSObject();
+        ret.put("status", "started");
+        call.resolve(ret);
+    }
+
+    @PluginMethod
     public void importSms(PluginCall call) {
         if (getPermissionState("sms") != PermissionState.GRANTED) {
             requestPermissionForAlias("sms", call, "smsPermsCallback");

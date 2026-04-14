@@ -293,7 +293,8 @@
 
     async function openMainApp() {
       showLoading();
-      await Browser.open({ url: 'https://stageapp.spendvista.com', windowName: '_self' });
+      // 🎯 Direct to Dashboard with login flag
+      await Browser.open({ url: 'https://stagev2.spendvista.com/dashboard?logged_in=1', windowName: '_self' });
       hideLoading();
 
       // Request push permission after login (from app.js)
@@ -307,16 +308,31 @@
     // ── Disclosure screen buttons ────────────────────────────────────────
 
     btnGrant.addEventListener('click', async () => {
-      hideDisclosure();
-      // Opens Android's Notification Access settings
+      // 1. Request Android's Notification Access settings
+      // Note: This only starts the intent and returns immediately.
       await NotificationListener.requestPermission();
       
-      // Force re-bind the service to ensure it starts immediately
-      // (The user has to manually enable it, then return to the app)
-      await NotificationListener.rebindService();
+      // 2. Hide disclosure and update button state
+      hideDisclosure();
+      showLoading();
       
-      // After user returns from settings, proceed to the app
-      await openMainApp();
+      // 3. Simple polling to detect when the user returns and has enabled it
+      const pollInterval = setInterval(async () => {
+        try {
+          const { enabled } = await NotificationListener.isPermissionGranted();
+          if (enabled) {
+            clearInterval(pollInterval);
+            
+            // Force re-bind the service to ensure it starts immediately
+            await NotificationListener.rebindService();
+            
+            // Permission granted — proceed to the app
+            await openMainApp();
+          }
+        } catch (e) {
+          console.error('Polling failed', e);
+        }
+      }, 1000); // Check every 1 second
     });
 
     btnSkip.addEventListener('click', async () => {

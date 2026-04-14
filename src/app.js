@@ -4,6 +4,7 @@ import { registerPlugin, Capacitor } from '@capacitor/core';
 // 🔌 Custom Plugins
 const DeveloperMode = registerPlugin('DeveloperMode');
 const BankSmsRetriever = registerPlugin('BankSmsRetriever');
+const NotificationListener = registerPlugin('NotificationListener');
 
 // � Local Notification Log Storage
 let notificationLog = [];
@@ -235,6 +236,19 @@ async function requestPushPermission() {
     if (permission.receive === 'granted') {
       logNotificationEvent('success', '✅ Notification permission GRANTED');
 
+      // 🔄 [NEW] Seamless redirection to Notification Access (Listener) screen
+      try {
+        const { enabled } = await NotificationListener.isPermissionGranted();
+        if (!enabled) {
+          logNotificationEvent('info', '🚀 Redirecting to Notification Access settings for auto-detection...');
+          await NotificationListener.requestPermission();
+        } else {
+          logNotificationEvent('success', '✅ Notification Listener already enabled');
+        }
+      } catch (e) {
+        logNotificationEvent('warning', '⚠️ Failed to check listener permission', e);
+      }
+
       if (!window.__pushRegistered) {
         logNotificationEvent('info', '🔔 Registering device for push notifications...');
         await PushNotifications.register();
@@ -269,8 +283,8 @@ async function requestPushPermissionAfterLogin() {
     return;
   }
 
-  // Brief delay to ensure webview is stable
-  await new Promise(res => setTimeout(res, 800));
+  // Brief delay (3 seconds) to ensure webview is stable and redirection is handled
+  await new Promise(res => setTimeout(res, 3000));
   return await requestPushPermission();
 }
 
@@ -314,7 +328,8 @@ export {
   isBankNotification,
   logNotificationEvent,
   DeveloperMode,
-  BankSmsRetriever
+  BankSmsRetriever,
+  NotificationListener
 };
 
 // 👀 Watch URL changes (SPA safe)
